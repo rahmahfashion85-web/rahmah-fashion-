@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>অ্যাডমিন – Rahmah Fashion</title>
+<link rel="icon" href="/img/circle.png">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--m:#5e1236;--p:#8a2a5b;--c:#fbf3e8;--l:#e9d8c4}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Hind Siliguri',system-ui,sans-serif;background:var(--c);color:#2b1620;font-size:15px;padding-bottom:40px}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{background:var(--m);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5}
+.top button{background:#fff3;border:0;color:#fff;padding:6px 12px;border-radius:14px}
+.tabs{display:flex;background:#fff;overflow-x:auto;border-bottom:1px solid var(--l);position:sticky;top:46px;z-index:4}
+.tabs button{flex:1;padding:12px 10px;border:0;background:none;font-weight:600;white-space:nowrap;border-bottom:3px solid transparent;color:#7a5a68}
+.tabs button.on{color:var(--m);border-color:var(--m)}
+#v{max-width:760px;margin:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.bx{background:#fff;border:1px solid var(--l);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:9px}
+.bx label{font-size:13px;font-weight:600;color:#6b4a58;display:flex;flex-direction:column;gap:3px}
+input,select,textarea{border:1.5px solid var(--l);border-radius:10px;padding:10px;background:#fffdf9;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--p)}
+.b{background:var(--m);color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;cursor:pointer;width:100%}
+.b.o{background:#fff;color:var(--m);border:1.5px solid var(--m)}.b.r{background:#b3261e}.b:disabled{opacity:.5}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{min-width:0}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pi{display:flex;gap:10px;align-items:center}
+.pi img,.pi .nt{width:56px;height:70px;object-fit:cover;border-radius:8px;background:#f3e6d6;display:grid;place-items:center;flex:none}
+.pi>div{flex:1}.pi small{color:#7a5a68}
+.tag{background:#fde8c8;color:#8a5200;font-size:11px;padding:1px 7px;border-radius:8px}
+.imgs{display:flex;gap:8px;flex-wrap:wrap}
+.imgs div{position:relative}.imgs img{width:78px;height:98px;object-fit:cover;border-radius:8px}
+.imgs button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:#b3261e;color:#fff}
+.lg{max-width:380px;margin:60px auto;padding:0 16px}.lg img{width:170px;display:block;margin:0 auto 14px}
+.ln{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.err{color:#b3261e;font-size:14px;text-align:center}
+#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#2b1620;color:#fff;padding:9px 18px;border-radius:22px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+#toast.s{opacity:1}
+</style>
+</head>
+<body>
+<div id="app"></div><div id="toast"></div>
+<script>
+const $=q=>document.querySelector(q),bn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]),tk=n=>'৳'+bn(Math.round(n).toLocaleString('en-US'));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const ST=['নতুন অর্ডার','কনফার্মড','শিপড','ডেলিভারড','বাতিল'],PAY={bkash:'বিকাশ',nagad:'নগদ',cod:'ক্যাশ অন ডেলিভারি'};
+let T=sessionStorage.rf_t||'',D=null,tab='p',ed=null,tm;
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('s');clearTimeout(tm);tm=setTimeout(()=>t.classList.remove('s'),2200)};
+const pr=p=>Math.round(p.regular*(100-(p.disc||0))/100);
+async function api(path,o={}){const r=await fetch('/api/'+path,{...o,headers:{...(o.headers||{}),authorization:'Bearer '+T}});const j=await r.json().catch(()=>({}));if(r.status==401&&path!='login'){T='';sessionStorage.rf_t='';login()}if(!r.ok)throw Error(j.error||'ত্রুটি হয়েছে');return j}
+const post=(p,b)=>api(p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});
+const saveAll=async()=>{await post('admin/store',D);toast('সংরক্ষিত হয়েছে ✓')};
+function login(msg){$('#app').innerHTML=`<div class=lg><img src="/img/logo.png"><div class=bx><h3 style="text-align:center;color:var(--m)">অ্যাডমিন লগইন</h3><input id=pw type=password placeholder="পাসওয়ার্ড" autocomplete=current-password onkeydown="event.key=='Enter'&&go()"><button class=b id=lb onclick="go()">লগইন</button><div class=err id=le>${msg||''}</div></div></div>`}
+async function go(){const b=$('#lb');b.disabled=true;try{const r=await post('login',{password:$('#pw').value});T=r.token;sessionStorage.rf_t=T;start()}catch(e){$('#le').textContent=e.message;b.disabled=false}}
+async function start(){try{D=await(await fetch('/api/store')).json();shell()}catch(e){login('ডেটা লোড করা যায়নি')}}
+function shell(){$('#app').innerHTML=`<div class=top><b>Rahmah Fashion অ্যাডমিন</b><button onclick="T='';sessionStorage.rf_t='';login()">লগআউট</button></div><div class=tabs>${[['p','👗 পণ্য'],['o','📦 অর্ডার'],['c','🗂️ ক্যাটাগরি'],['s','⚙️ সেটিংস']].map(([k,l])=>`<button data-k=${k} onclick="tab='${k}';ed=null;view()">${l}</button>`).join('')}</div><div id=v></div>`;view()}
+function view(){document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k==tab));({p:ed?edit:plist,o:orders,c:cats,s:sets})[tab]()}
+function plist(){const l=D.products,sm=l.some(p=>p.sample),cn=id=>(D.categories.find(c=>c.id==id)||{}).name||'—';
+$('#v').innerHTML=`<button class=b onclick="newP()">➕ নতুন বোরকা যোগ করুন</button>${sm?'<button class="b o" onclick="delSamples()">🧹 সব নমুনা পণ্য মুছুন</button>':''}${l.map(p=>`<div class="bx pi"><img src="${esc((p.images||[])[0]||'')}" onerror="this.style.visibility='hidden'"><div><b>${esc(p.name)}</b> ${p.sample?'<span class=tag>নমুনা</span>':''}<br><small>${esc(cn(p.cat))} • ${tk(pr(p))}${p.disc?' ('+bn(p.disc)+'% ছাড়)':''} • স্টক ${bn(p.stock)}</small></div><button class="b o" style="width:auto;padding:8px 14px" onclick="editP('${p.id}')">এডিট</button></div>`).join('')||'<p style="text-align:center;padding:30px">কোনো পণ্য নেই</p>'}`}
+function newP(){ed={isNew:1,id:'p'+Date.now().toString(36),name:'',cat:(D.categories[0]||{}).id||'',regular:'',disc:0,sizes:['৫২','৫৪','৫৬'],colors:['কালো'],stock:10,desc:'',images:[]};view()}
+function editP(id){ed=JSON.parse(JSON.stringify(D.products.find(p=>p.id==id)));view()}
+function edit(){const p=ed;$('#v').innerHTML=`<div class=bx><b>${p.isNew?'নতুন বোরকা':'বোরকা এডিট'}</b>
+<label>নাম<input id=en value="${esc(p.name)}"></label>
+<label>ক্যাটাগরি<select id=ec>${D.categories.map(c=>`<option value="${esc(c.id)}" ${c.id==p.cat?'selected':''}>${esc(c.icon+' '+c.name)}</option>`).join('')}</select></label>
+<div class=g2><label>আসল দাম (৳)<input id=er type=number inputmode=numeric value="${esc(p.regular)}" oninput="fp()"></label><label>ডিসকাউন্ট (%)<input id=ed type=number inputmode=numeric value="${esc(p.disc)}" oninput="fp()"></label></div>
+<div class=ln><span>বিক্রয় মূল্য:</span><b id=ef style="color:var(--m)"></b></div>
+<label>সাইজ (কমা দিয়ে লিখুন)<input id=es value="${esc(p.sizes.join(', '))}"></label>
+<label>কালার (কমা দিয়ে লিখুন)<input id=eo value="${esc(p.colors.join(', '))}"></label>
+<label>স্টক (সংখ্যা)<input id=et type=number inputmode=numeric value="${esc(p.stock)}"></label>
+<label>বর্ণনা<textarea id=edc rows=3>${esc(p.desc)}</textarea></label>
+<label>ছবি (একাধিক দেওয়া যাবে)<input type=file accept="image/*" multiple onchange="up(this.files);this.value=''"></label><div class=imgs id=im></div>
+<button class=b id=sv onclick="svP()">💾 সংরক্ষণ করুন</button><button class="b o" onclick="ed=null;view()">বাতিল</button>${p.isNew?'':'<button class="b r" onclick="delP()">🗑️ এই বোরকা মুছুন</button>'}</div>`;fp();imgs()}
+const fp=()=>{$('#ef').textContent=tk(pr({regular:+$('#er').value||0,disc:+$('#ed').value||0}))};
+function imgs(){$('#im').innerHTML=ed.images.map((u,i)=>`<div><img src="${esc(u)}"><button onclick="ed.images.splice(${i},1);imgs()">×</button></div>`).join('')||'<small>ছবি নেই — নমুনা ছবি দেখাবে</small>'}
+const shrink=f=>new Promise((ok,no)=>{const i=new Image;i.onload=()=>{const s=Math.min(1,1000/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):no(Error('ছবি পড়া যায়নি')),'image/jpeg',.82)};i.onerror=()=>no(Error('ছবি পড়া যায়নি'));i.src=URL.createObjectURL(f)});
+async function up(fs){toast('ছবি আপলোড হচ্ছে…');for(const f of fs){try{const b=await shrink(f),r=await api('admin/upload',{method:'POST',body:b,headers:{'content-type':'image/jpeg'}});ed.images.push(r.url);imgs()}catch(e){toast(e.message)}}toast('আপলোড শেষ ✓')}
+async function svP(){const v=id=>$('#'+id).value.trim(),l=s=>s.split(/[,،]/).map(x=>x.trim()).filter(Boolean);
+const p={...ed,name:v('en'),cat:v('ec'),regular:+v('er'),disc:Math.min(90,+v('ed')||0),sizes:l(v('es')),colors:l(v('eo')),stock:parseInt(v('et'))||0,desc:v('edc')};delete p.isNew;
+if(!p.name||!p.regular||!p.sizes.length||!p.colors.length)return toast('নাম, দাম, সাইজ ও কালার দিন');
+const old=D.products;D.products=ed.isNew?[p,...old]:old.map(x=>x.id==p.id?p:x);const b=$('#sv');b.disabled=true;
+try{await saveAll();ed=null;view()}catch(e){D.products=old;toast(e.message);b.disabled=false}}
+async function delP(){if(!confirm('এই বোরকা মুছে ফেলবেন?'))return;const old=D.products;D.products=old.filter(x=>x.id!=ed.id);try{await saveAll();ed=null;view()}catch(e){D.products=old;toast(e.message)}}
+async function delSamples(){if(!confirm('সব নমুনা পণ্য মুছে ফেলবেন?'))return;const old=D.products;D.products=old.filter(x=>!x.sample);try{await saveAll();view()}catch(e){D.products=old;toast(e.message)}}
+async function orders(){$('#v').innerHTML='<p style="text-align:center;padding:30px">লোড হচ্ছে…</p>';try{const l=await api('admin/orders');
+$('#v').innerHTML=l.map(o=>`<div class=bx><div class=ln><b>#${o.id}</b><small>${new Date(o.created).toLocaleString('bn-BD')}</small></div><div><b>${esc(o.name)}</b> • <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a><br><small>${esc(o.address)}, ${esc(o.upazila)}, ${esc(o.district)}</small></div>${o.items.map(i=>`<div class=ln><span>${esc(i.name)}<br><small>সাইজ ${esc(i.size)} • ${esc(i.color)} • ${bn(i.qty)}টি</small></span><b>${tk(i.price*i.qty)}</b></div>`).join('')}<div class=ln><span>ডেলিভারি</span><b>${tk(o.delivery)}</b></div><div class=ln><b>সর্বমোট</b><b style="color:var(--m)">${tk(o.total)}</b></div><div class=ln><span>পেমেন্ট: <b>${PAY[o.pay]}</b></span>${o.pay!='cod'?`<span>TrxID: <b>${esc(o.trx)}</b>${o.sender?'<br><small>প্রেরক: '+esc(o.sender)+'</small>':''}</span>`:''}</div><select onchange="st('${o.id}',this.value)">${ST.map(s=>`<option ${s==o.status?'selected':''}>${s}</option>`).join('')}</select><button class="b o" onclick="delO('${o.id}')">অর্ডার মুছুন</button></div>`).join('')||'<p style="text-align:center;padding:30px">এখনো কোনো অর্ডার নেই</p>'}catch(e){toast(e.message)}}
+async function st(id,s){try{await post('admin/order',{id,status:s});toast('স্ট্যাটাস আপডেট ✓')}catch(e){toast(e.message)}}
+async function delO(id){if(!confirm('অর্ডারটি মুছে ফেলবেন?'))return;try{await post('admin/order',{id,del:1});orders()}catch(e){toast(e.message)}}
+function cats(){$('#v').innerHTML=`${D.categories.map((c,i)=>`<div class="bx row"><span style="font-size:26px">${esc(c.icon)}</span><b style="flex:1">${esc(c.name)}</b><button class="b o" style="width:auto;padding:6px 12px" onclick="delC(${i})">মুছুন</button></div>`).join('')}<div class=bx><b>নতুন ক্যাটাগরি</b><div class=g2><label>আইকন (ইমোজি)<input id=ci value="🧕"></label><label>নাম<input id=cn></label></div><button class=b onclick="addC()">➕ যোগ করুন</button></div>`}
+async function addC(){const n=$('#cn').value.trim();if(!n)return toast('নাম লিখুন');D.categories.push({id:'c'+Date.now().toString(36),name:n,icon:$('#ci').value.trim()||'🛍️'});try{await saveAll();cats()}catch(e){D.categories.pop();toast(e.message)}}
+async function delC(i){if(!confirm('ক্যাটাগরি মুছবেন? এর পণ্যগুলো থেকে যাবে, শুধু ক্যাটাগরি সরবে।'))return;const [c]=D.categories.splice(i,1);try{await saveAll();cats()}catch(e){D.categories.splice(i,0,c);toast(e.message)}}
+function sets(){const s=D.settings;$('#v').innerHTML=`<div class=bx><label>বিকাশ নম্বর<input id=sb value="${esc(s.bkash)}" inputmode=tel></label><label>নগদ নম্বর<input id=sn value="${esc(s.nagad)}" inputmode=tel></label><label>WhatsApp নম্বর (কান্ট্রি কোডসহ, যেমন 8801737588395)<input id=sw value="${esc(s.whatsapp)}" inputmode=tel></label><div class=g2><label>ডেলিভারি – ঢাকা জেলা (৳)<input id=sd type=number value="${esc(s.dhaka)}"></label><label>ডেলিভারি – ঢাকার বাইরে (৳)<input id=so type=number value="${esc(s.outside)}"></label></div><button class=b onclick="svS()">💾 সংরক্ষণ করুন</button><small>অ্যাডমিন পাসওয়ার্ড বদলাতে Netlify → Environment variables → ADMIN_PASSWORD পরিবর্তন করে আবার Deploy করুন।</small></div>`}
+async function svS(){const v=id=>$('#'+id).value.trim(),old=D.settings;D.settings={bkash:v('sb'),nagad:v('sn'),whatsapp:v('sw').replace(/\D/g,''),dhaka:+v('sd')||0,outside:+v('so')||0};try{await saveAll()}catch(e){D.settings=old;toast(e.message)}}
+T?start():login();
+</script>
+</body>
+</html>
